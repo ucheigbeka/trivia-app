@@ -1,4 +1,5 @@
 .vscode
+.idea
 __pycache__
 venv
 
@@ -9,6 +10,8 @@ venv
 ._*
 .Spotlight-V100
 .Trashes
+.env
+.flaskenv
 ehthumbs.db
 Thumbs.db
 env/
