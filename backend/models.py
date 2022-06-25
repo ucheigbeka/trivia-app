@@ -1,10 +1,10 @@
 import os
-from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
-import json
+from dotenv import load_dotenv
 
-database_name = 'trivia'
-database_path = 'postgres://{}/{}'.format('localhost:5432', database_name)
+load_dotenv('.env')
+
+database_path = os.environ.get('DATABASE_PATH')
 
 db = SQLAlchemy()
 
@@ -12,6 +12,8 @@ db = SQLAlchemy()
 setup_db(app)
     binds a flask application and a SQLAlchemy service
 """
+
+
 def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -19,24 +21,22 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     db.create_all()
 
-"""
-Question
+    return db
 
-"""
+
+# ----------------------------------------------------------------------------#
+# Question
+# ----------------------------------------------------------------------------#
+
+
 class Question(db.Model):
     __tablename__ = 'questions'
 
-    id = Column(Integer, primary_key=True)
-    question = Column(String)
-    answer = Column(String)
-    category = Column(String)
-    difficulty = Column(Integer)
-
-    def __init__(self, question, answer, category, difficulty):
-        self.question = question
-        self.answer = answer
-        self.category = category
-        self.difficulty = difficulty
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String)
+    answer = db.Column(db.String)
+    category = db.Column(db.Integer, db.ForeignKey('categories.id'))
+    difficulty = db.Column(db.Integer)
 
     def insert(self):
         db.session.add(self)
@@ -56,23 +56,23 @@ class Question(db.Model):
             'answer': self.answer,
             'category': self.category,
             'difficulty': self.difficulty
-            }
+        }
 
-"""
-Category
 
-"""
+# ----------------------------------------------------------------------------#
+# Category
+# ----------------------------------------------------------------------------#
+
+
 class Category(db.Model):
     __tablename__ = 'categories'
 
-    id = Column(Integer, primary_key=True)
-    type = Column(String)
-
-    def __init__(self, type):
-        self.type = type
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String)
+    questions = db.relationship('Question', backref='_category', lazy=True, cascade='all, delete')
 
     def format(self):
         return {
             'id': self.id,
             'type': self.type
-            }
+        }
